@@ -27,3 +27,38 @@ Git
 	6. git log --graph 查看到分支合并图	
 	7. git log --graph --pretty=oneline --abbrev-commit 看到分支的合并情况	
 	8. git merge --no-ff -m "merge with no-ff" dev 强制禁用Fast forward模式合并分支(-m参数，把commit描述写进去)
+	9. git stash “储藏”当前工作现场
+	10. git stash list 查看被储存的工作现场
+	11. 恢复储存现场 
+		1. git stash apply 恢复，但是恢复后，stash内容并不删除，你需要用git stash drop来删除
+		2. git stash pop，恢复的同时把stash内容也删了
+		3. git stash apply stash@{0} 恢复到指定储存记录
+ 	12. git branch -D <name> 强行删除一个没有被合并过的分支<name>
+	13. git remote 查看远程仓库
+	14. git remote -v 查看远程仓库 详细信息
+	15. git push origin master 推送分支到远程仓库上 被推送的分支为 master
+	16. git checkout -b dev origin/dev 创建远程origin的dev分支到本地
+	17. git pull 抓取最新的数据
+	18. 多人协作的工作模式通常是这样：
+		1. 首先，可以试图用git push origin branch-name推送自己的修改
+		2. 如果推送失败，则因为远程分支比你的本地更新，需要先用git pull试图合并
+		3. 如果合并有冲突，则解决冲突，并在本地提交
+		4. 没有冲突或者解决掉冲突后，再用git push origin branch-name推送就能成功
+		5. 如果git pull提示“no tracking information”，则说明本地分支和远程分支的链接关系没有创建，用命令git branch --set-upstream branch-name origin/branch-name
+
+三 标签管理(tag)
+	1. git tag v1.0 打上一个name为 v1.0的标签, 默认为HEAD，也可以指定一个commit id
+	2. git tag 查看标签
+	3. git tag v0.9 6224937 在历史版本号为<6224937> 打上标签
+	4. git show <tagname>查看标签信息
+	5. git tag -a v0.1 -m 'version 0.1 released' ddcb78c  创建带有说明的标签，用-a指定标签名，-m指定说明文字 <ddcb78c 表示版本号>
+	6. git tag -d v0.1 删除标签为 v0.1
+	7. git push origin v1.0 推送标签到远程仓库上
+	8. git push origin --tags 一次推送所有标签到远程仓库
+	9. 删除远程仓库的标签 
+		1. git tag -d v0.9
+		2. git push origin :refs/tags/v0.9	
+
+	10. git add -f <filename> 强制添加被gitignore忽略的文件到git
+	11. git check-ignore -v <filename> 检查.gitignore文件哪个规则出错
+
