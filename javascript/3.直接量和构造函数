@@ -1,0 +1,209 @@
+## 1. 对象直接量
+	“对象直接量写法（object literal notation）”是按需创建对象的一种理想方式
+	* 对象直接量语法包括：
+		将对象主体包含在一对花括号内（{ and }）。
+		对象内的属性或方法之间使用逗号分隔。最后一个名值对后也可以有逗号，但在IE下会报错，所以尽量不要在最后一个属性或方法后加逗号。
+		属性名和值之间使用冒号分隔
+		如果将对象赋值给一个变量，不要忘了在右括号}之后补上分号
+	* 通过构造函数创建对象
+		// one way -- using a literal
+		var car = {goes: "far"};// 建议使用这种方式(直接量)
+		//两种是等价的
+		var car = new Object();
+		car.goes = "far";
+		不要使用new Object()，尽可能的使用对象直接量来创建实例对象。
+
+## 2. 自定义构造函数
+	* 自定义的构造函数来创建实例对象，正如下面的代码所示：
+		var adam = new Person("Adam");
+		adam.say(); // "I am Adam"
+		这里用了“类”Person创建了实例，这种写法看起来很像Java中的实例创建。两者的语法的确非常接近，但实际上JavaScript中没有类的概念，Person是一个函数
+		Person构造函数是如何定义的呢？看下面的代码：
+		var Person = function (name) {
+			this.name = name;
+			this.say = function () {
+				return "I am " + this.name;
+			};
+		};
+	* 通过关键字new来调用这个构造函数时，函数体内将发生这些事情：
+		创建一个空对象，将它的引用赋给this，继承函数的原型。
+		通过this将属性和方法添加至这个对象
+		最后返回this指向的新对象（如果没有手动返回其他的对象）
+	* 将需要重用的成员和方法放在原型:
+		Person.prototype.say = function () {
+			return "I am " + this.name;
+		};
+	* 构造函数的返回值
+		用new调用的构造函数总是会返回一个对象，默认返回this所指向的对象。构造函数中其实是可以返回任意对象的，只要你返回的东西是对象即可。如果返回值不是对象（字符串、数字或布尔值），程序不会报错，但这个返回值被忽略，最终还是返回this所指的对象。
+	* 强制使用new的模式
+		漏掉new不会产生语法错误也不会有运行时错误，但可能会造成逻辑错误，导致执行结果不符合预期。这是因为如果不写new的话，函数内的this会指向全局对象（在浏览器端this指向window）。
+	* 使用that
+		不要将所有成员挂在this上，将它们挂在that上，并返回that。
+			function Waffle() {
+			var that = {};
+				that.tastes = "yummy";
+				return that;
+			}
+		创建简单的实例对象，甚至不需要定义一个局部变量that，可以直接返回一个对象直接量，就像这样：
+			function Waffle() {
+				return {
+					tastes: "yummy"
+				};
+			}
+			
+## 3. 调用自身的构造函数
+	* 在构造函数中首先检查this是否是构造函数的实例，如果不是，再通过new调用构造函数，并将new的结果返回：
+		function Waffle() {
+
+			if (!(this instanceof Waffle)) {
+				return new Waffle();
+			}
+			this.tastes = "yummy";
+
+		}
+		Waffle.prototype.wantAnother = true;
+
+		// testing invocations
+		var first = new Waffle(),
+			second = Waffle();
+
+		console.log(first.tastes); // "yummy"
+		console.log(second.tastes); // "yummy"
+
+		console.log(first.wantAnother); // true
+		console.log(second.wantAnother); // true
+		
+	* 另一种检查实例的通用方法是使用arguments.callee，而不是直接将构造函数名写死在代码中：
+		if (!(this instanceof arguments.callee)) {
+			return new arguments.callee();
+		}
+		这里需要说明的是，在任何函数内部都会自行创建一个arguments对象，它包含函数调用时传入的参数。同时arguments包含一个callee属性，指向它所在的正在被调用的函数。需要注意，ES5严格模式中是禁止使用arguments.callee的，因此最好对它的使用加以限制，并删除任何你能在代码中找到的实例(代码中最好不要使用arguments.callee)
+		
+## 4. 数组直接量
+	* 数组也可以通过直接量形式创建。而且更推荐使用直接量创建数组。使用Array()和使用直接量模式：
+		// array of three elements
+		// warning: antipattern
+		var a = new Array("itsy", "bitsy", "spider");
+
+		// the exact same array
+		var a = ["itsy", "bitsy", "spider"];//推荐使用
+
+		console.log(typeof a); // "object", because arrays are objects
+		console.log(a.constructor === Array); // true
+		
+## 5. 检查是不是数组
+	* ECMAScript 5定义了一个新的方法Array.isArray()，如果参数是数组的话就返回true。
+		Array.isArray([]); // true
+		// trying to fool the check
+		// with an array-like object
+		Array.isArray({
+			length: 1,
+			"0": 1,
+			slice: function () {}
+		}); // false
+		
+## 6. 使用JSON
+	* JSON（JavaScript Object Notation）是一种轻量级的数据交换格式
+	* JSON和对象直接量在语法上的唯一区别是，合法的JSON属性名均用引号包含。而在对象直接量中，只有属性名是非法的标识符时采用引号包含，比如，属性名中包含空格{"first name": "Dave"},在JSON字符串中，不能使用函数和正则表达式直接量。
+	* 不推荐使用eval()来“粗糙的”解析JSON字符串。最好使用JSON.parse()方法.
+		// an input JSON string
+		var jstr = '{"mykey": "my value"}';
+
+		// antipattern (反模式，不推荐使用)
+		var data = eval('(' + jstr + ')');
+
+		// preferred (推荐使用)
+		var data = JSON.parse(jstr);
+
+		console.log(data.mykey); // "my value"
+	* jQuery，可以直接使用它提供的parseJSON()方法:
+		// an input JSON string
+		var jstr = '{"mykey": "my value"}';
+
+		var data = jQuery.parseJSON(jstr);
+		console.log(data.mykey); // "my value"
+		和JSON.parse()方法相对应的是JSON.stringify()。它将对象或数组（或任何原始值）转换为JSON字符串。
+
+## 7. 正则表达式直接量
+		
+	* 创建正则表达式的两种方法，创建的正则用来匹配一个反斜杠（\）：
+		// regular expression literal 使用正则表达式直接量
+		var re = /\\/gm; 
+		// constructor 使用new RegExp()构造函数
+		var re = new RegExp("\\\\", "gm");
+		更推荐使用直接量写法。
+	* 正则表达式直接量语法
+		正则表达式直接量使用两个斜线包裹起来，正则的主体部分不包括两端的斜线。在第二个斜线之后可以指定模式匹配的修饰符用以高级匹配，修饰符不需要引号引起来，JavaScript中有三个修饰符：
+		×. g，全局匹配
+		×. m，多行匹配
+		×. i，忽略大小写的匹配
+		
+## 8. 原始值的包装对象
+	* JavaScript中有五种原始类型：数字、字符串、布尔值、null和undefined。除了null和undefined之外，其他三种都有对应的“包装对象”（wrapper objects）。可以通过内置构造函数来生成包装对象，Number()、String()、和Boolean()。
+	// a primitive number
+	var n = 100;
+	console.log(typeof n); // "number"
+
+	// a Number object
+	var nobj = new Number(100);
+	console.log(typeof nobj); // "object"
+	
+## 小结
+	* 在本章里，我们讨论了多种直接量模式，它们是使用构造函数写法的替代方案，本章讲述了这些内容：
+		对象直接量写法——一种简洁优雅的定义对象的方法，名值对之间用逗号分隔，通过花括号包装起来
+		构造函数——内置构造函数（内置构造函数通常都有对应的直接量语法）和自定义构造函数。
+		一种强制函数以构造函数的模式执行（不管用不用new调用构造函数，都始终返回new出来的实例）的技巧
+		数组直接量写法——数组元素之间使用逗号分隔，通过方括号括起来
+		JSON——是一种轻量级的数据交换格式
+		正则表达式直接量
+		避免使用其他的内置构造函数：String()、Number()、Boolean()以及不同种类的Error()构造器
+		
+	* 通常除了Date()构造函数之外，其他的内置构造函数并不常用，下面的表格中对这些构造函数以及它们的直接量语法做了整理。
+		<table>
+			<tr>
+				<td>内置构造函数（不推荐）</td>
+				<td>直接量语法和原始值（推荐）</td>
+			</tr>
+			<tr>
+				<td>var o = new Object();</td>
+				<td>var o = {};
+				</td>
+			</tr>
+			<tr>
+				<td>var a = new Array();
+				</td>
+				<td>var a = [];
+				</td>
+			</tr>
+			<tr>
+				<td>var re = new RegExp("[a-z]","g"); 
+				</td>
+				<td>var re = /[a-z]/g;
+				</td>
+			</tr>
+			<tr>
+				<td>var s = new String(); 
+				</td>
+				<td>var s = "";
+				</td>
+			</tr>
+			<tr>
+				<td>var n = new Number(); 
+				</td>
+				<td>var n = 0;
+				</td>
+			</tr>
+			<tr>
+				<td>var b = new Boolean();
+				</td>
+				<td>var b = false;
+				</td>
+			</tr>
+			<tr>
+				<td>throw new Error("uh-oh");
+				</td>
+				<td>throw { name: "Error",message: "uh-oh"};或者throw Error("uh-oh");
+				</td>
+			</tr>
+		</table>
+
